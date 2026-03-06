@@ -88,6 +88,92 @@ def list_my_issues(limit: int = 10) -> str:
     return search_issues(f'assignee = currentUser() ORDER BY updated DESC', limit)
 
 
+@mcp.tool()
+def add_comment(key: str, comment: str) -> str:
+    """添加评论到 Jira Issue
+
+    Args:
+        key: Issue Key (如 ACP-50180)
+        comment: 评论内容
+
+    Returns:
+        JSON 格式的结果
+    """
+    session = get_session()
+    url = f"{JIRA_URL}/rest/api/2/issue/{key}/comment"
+
+    payload = {"body": comment}
+
+    try:
+        response = session.post(url, json=payload, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        return json.dumps({
+            "success": True,
+            "id": data.get("id"),
+            "author": data.get("author", {}).get("displayName"),
+            "created": data.get("created"),
+            "body": data.get("body", "")[:200]
+        }, ensure_ascii=False, indent=2)
+    except requests.exceptions.RequestException as e:
+        return json.dumps({"error": f"Failed to add comment: {str(e)}"})
+
+
+@mcp.tool()
+def transition_issue(key: str, transition_id: str) -> str:
+    """转换 Jira Issue 状态
+
+    Args:
+        key: Issue Key
+        transition_id: 转换 ID (如 "31" 表示 Done)
+
+    Returns:
+        JSON 格式的结果
+    """
+    session = get_session()
+    url = f"{JIRA_URL}/rest/api/2/issue/{key}/transitions"
+
+    payload = {"transition": {"id": transition_id}}
+
+    try:
+        response = session.post(url, json=payload, timeout=30)
+        response.raise_for_status()
+        return json.dumps({"success": True, "message": f"Issue {key} transitioned"}, ensure_ascii=False)
+    except requests.exceptions.RequestException as e:
+        return json.dumps({"error": f"Failed to transition: {str(e)}"})
+
+
+@mcp.tool()
+def get_transitions(key: str) -> str:
+    """获取 Issue 可用的状态转换列表
+
+    Args:
+        key: Issue Key
+
+    Returns:
+        JSON 格式的转换列表
+    """
+    session = get_session()
+    url = f"{JIRA_URL}/rest/api/2/issue/{key}/transitions"
+
+    try:
+        response = session.get(url, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+
+        transitions = []
+        for t in data.get("transitions", []):
+            transitions.append({
+                "id": t.get("id"),
+                "name": t.get("name"),
+                "to_status": t.get("to", {}).get("name")
+            })
+
+        return json.dumps(transitions, ensure_ascii=False, indent=2)
+    except requests.exceptions.RequestException as e:
+        return json.dumps({"error": f"Failed to get transitions: {str(e)}"})
+
+
 def main():
     """Entry point for the MCP server."""
     # 测试连接
