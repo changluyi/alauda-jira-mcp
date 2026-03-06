@@ -88,7 +88,8 @@ def list_my_issues(limit: int = 10) -> str:
     return search_issues(f'assignee = currentUser() ORDER BY updated DESC', limit)
 
 
-if __name__ == "__main__":
+def main():
+    """Entry point for the MCP server."""
     # 测试连接
     try:
         session = get_session()
@@ -99,5 +100,9 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Failed to connect to Jira: {e}", file=sys.stderr)
         sys.exit(1)
-    
+
     mcp.run()
+
+
+if __name__ == "__main__":
+    main()
