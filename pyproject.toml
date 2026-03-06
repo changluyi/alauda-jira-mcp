@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "alauda-jira-mcp"
+version = "0.1.0"
+description = "MCP server for Jira integration"
+readme = "README.md"
+license = "MIT"
+authors = [
+    {name = "Changlu Yi", email = "clyi@alauda.io"}
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "fastmcp>=0.1.0",
+    "requests>=2.28.0",
+    "httpx>=0.25.0",
+]
+
+[project.scripts]
+alauda-jira-mcp = "src.alauda_jira_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/clyi/alauda-jira-mcp"
+Repository = "https://github.com/clyi/alauda-jira-mcp.git"
+Issues = "https://github.com/clyi/alauda-jira-mcp/issues"
