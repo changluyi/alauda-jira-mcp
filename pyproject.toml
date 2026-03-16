@@ -29,7 +29,10 @@ dependencies = [
 ]
 
 [project.scripts]
-alauda-jira-mcp = "src.alauda_jira_mcp.server:main"
+alauda-jira-mcp = "alauda_jira_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/alauda_jira_mcp"]
 
 [project.urls]
 Homepage = "https://github.com/clyi/alauda-jira-mcp"
