@@ -131,58 +131,41 @@ def add_comment(key: str, comment: str) -> str:
 
 
 @mcp.tool()
-def transition_issue(key: str, transition_id: str) -> str:
+def transition_issue(key: str, transition_id: str, fields: dict = None) -> str:
     """转换 Jira Issue 状态
 
     Args:
-        key: Issue Key
-        transition_id: 转换 ID (如 "31" 表示 Done)
+        key: Issue Key (如 ACP-50180)
+        transition_id: 转换 ID (如 "31" 表示 Done, "41" 表示 Ready for QA)
+        fields: 可选，要同时更新的字段字典，例如 {"CVEFixImageURLRequired": "registry/image:tag"}
 
     Returns:
         JSON 格式的结果
+
+    Examples:
+        简单状态转换: transition_issue("ACP-50180", "31")
+        状态转换+字段: transition_issue("ACP-50180", "41", {"fixVersions": [{"id": "12345"}]})
     """
     session = get_session()
     url = f"{JIRA_URL}/rest/api/2/issue/{key}/transitions"
 
     payload = {"transition": {"id": transition_id}}
+    if fields:
+        payload["fields"] = fields
 
     try:
         response = session.post(url, json=payload, timeout=30)
         response.raise_for_status()
-        return json.dumps({"success": True, "message": f"Issue {key} transitioned"}, ensure_ascii=False)
-    except requests.exceptions.RequestException as e:
-        return json.dumps({"error": f"Failed to transition: {str(e)}"})
 
-
-@mcp.tool()
-def transition_issue_with_fields(key: str, transition_id: str, fields: dict) -> str:
-    """转换 Jira Issue 状态并同时更新自定义字段
-
-    Args:
-        key: Issue Key
-        transition_id: 转换 ID (如 "41" 表示 Ready for QA)
-        fields: 要更新的字段字典，例如 {"CVEFixImageURLRequired": "registry/image:tag"}
-
-    Returns:
-        JSON 格式的结果
-    """
-    session = get_session()
-    url = f"{JIRA_URL}/rest/api/2/issue/{key}/transitions"
-
-    payload = {
-        "transition": {"id": transition_id},
-        "fields": fields
-    }
-
-    try:
-        response = session.post(url, json=payload, timeout=30)
-        response.raise_for_status()
-        return json.dumps({
+        result = {
             "success": True,
-            "message": f"Issue {key} transitioned with fields",
-            "transition_id": transition_id,
-            "fields_updated": list(fields.keys())
-        }, ensure_ascii=False)
+            "message": f"Issue {key} transitioned successfully",
+            "transition_id": transition_id
+        }
+        if fields:
+            result["fields_updated"] = list(fields.keys())
+
+        return json.dumps(result, ensure_ascii=False)
     except requests.exceptions.RequestException as e:
         return json.dumps({"error": f"Failed to transition: {str(e)}"})
 
